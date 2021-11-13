@@ -16,6 +16,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 async function run() {
     try {
+        //Database Collections 
         await client.connect();
         const database = client.db("carVenture");
         const carsCollection = database.collection('car-brands');
@@ -24,20 +25,20 @@ async function run() {
         const reviewsCollection = database.collection('reviews');
 
 
-        //GET API
+        //GET API for all the products showing UI
         app.get('/cars', async (req, res) => {
             const result = carsCollection.find({});
             const cars = await result.toArray();
             res.send(cars);
 
         });
-        //get
+        //get api for specific product 
         app.get('/cars/:id', async (req, res) => {
             const carDetails = await carsCollection.findOne({ _id: ObjectId(req.params.id) });
             res.send(carDetails);
         });
 
-        //POST new products
+        //POST API for  new products
         app.post("/cars", async (req, res) => {
             const newPackage = (req.body);
             const result = await carsCollection.insertOne(newPackage);
@@ -51,7 +52,7 @@ async function run() {
             res.json(deletedProduct)
         });
 
-
+        //POST API for Products order
         app.post('/orders', async (req, res) => {
             const orders = await ordersCollection.insertOne(req.body);
             res.json(orders);
@@ -81,12 +82,13 @@ async function run() {
             res.json(updateStatus);
         });
 
-        //store all users siging with email
+        //POST API- all users siging with email
         app.post('/users', async (req, res) => {
             const users = await usersCollection.insertOne(req.body);
             res.json(users);
         });
 
+        //PUT API -user
         app.put('/users', async (req, res) => {
             const user = req.body;
             const filter = { email: user.email };
@@ -96,7 +98,7 @@ async function run() {
             res.json(result);
         })
 
-
+        //Update user role 
         app.put('/users/admin', async (req, res) => {
             const user = req.body;
             const filter = { email: user.email };
@@ -105,14 +107,25 @@ async function run() {
             res.json(result);
         });
 
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            let isAdmin = false;
+            if (user?.role === 'admin') {
+                isAdmin = true;
+            }
+            res.json({ admin: isAdmin });
+        })
 
-        //POST new package
+
+        //POST new review
         app.post("/reviews", async (req, res) => {
             const newReview = (req.body);
             const result = await reviewsCollection.insertOne(newReview);
             res.json(result);
         })
-        //GET API-orders 
+        //GET API-reviews
         app.get('/reviews', async (req, res) => {
             const reviews = await reviewsCollection.find({}).toArray();
             res.send(reviews);
